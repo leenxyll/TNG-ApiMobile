@@ -1,6 +1,7 @@
 var express = require('express');
 var cors = require('cors');
 const mssql = require('mssql');
+const moment = require("moment");
 require('dotenv').config();
 
 const config = {
@@ -136,9 +137,17 @@ app.post('/CreateTrip', async (req, res) => {
         const pool = await connectDatabase();
         const result = await pool.request()
             .input('TripTruckCode', mssql.Int, TripTruckCode)
-            .query('INSERT INTO TRIP (TripTruckCode) VALUES (@TripTruckCode)');
+            .query(`
+                INSERT INTO TRIP (TripTruckCode) VALUES (@TripTruckCode);
+                SELECT SCOPE_IDENTITY() AS TripCode;
+            `);
 
-        res.status(201).json({ message: "Trip created successfully!", TripCode: result.rowsAffected[0] });
+            
+        // ดึงค่า TripCode ที่เพิ่งถูกเพิ่ม
+        const insertedTripCode = result.recordset[0].TripCode;
+        console.log("insertedTripCode:", insertedTripCode);
+
+        res.status(201).json({ message: "Trip created successfully!", TripCode: insertedTripCode });
     } catch (err) {
         console.error("Error inserting Trip:", err);
         return res.status(500).json({ error: "Internal Server Error" });
@@ -160,15 +169,138 @@ app.post("/CreateShipLocation", async (req, res) => {
             .input('ShipLoLong', mssql.Float, ShipLoLong)
             .input('ShipLoAddr', mssql.NVarChar, ShipLoAddr)
             .input('ShipLoAddr2', mssql.NVarChar, ShipLoAddr2)
-            .query('INSERT INTO SHIP_LOCATION (ShipLoLat, ShipLoLong, ShipLoAddr, ShipLoAddr2) VALUES (@ShipLoLat, @ShipLoLong, @ShipLoAddr, @ShipLoAddr2)');
+            .query(`
+                INSERT INTO SHIP_LOCATION (ShipLoLat, ShipLoLong, ShipLoAddr, ShipLoAddr2) VALUES (@ShipLoLat, @ShipLoLong, @ShipLoAddr, @ShipLoAddr2);
+                SELECT SCOPE_IDENTITY() AS ShipLoCode
+                `);
 
-        res.status(201).json({ message: "Ship location created successfully!", ShipLoCode: result.rowsAffected[0] });
+                        // ดึงค่า TripCode ที่เพิ่งถูกเพิ่ม
+        const insertedShipLoCode = result.recordset[0].ShipLoCode;
+        console.log("insertedTripCode:", insertedShipLoCode);
+
+        res.status(201).json({ message: "Ship location created successfully!", ShipLoCode: insertedShipLoCode });
     } catch (err) {
         console.error("Error inserting ship location:", err);
         return res.status(500).json({ error: "Database error" });
     }
 });
 
-app.listen(6868, function () {
-    console.log('Server running on port 6868');
+// Create Shipment List
+app.post("/CreateShipmentList", async (req, res) => {
+    const { ShipListSeq, ShipListTripCode, ShipListShipLoCode } = req.body;
+    console.log("Received ShipListSeq:", ShipListSeq);
+
+    if (!ShipListSeq || !ShipListTripCode || !ShipListShipLoCode) {
+        return res.status(400).json({ error: "Missing required fields" });
+    }
+
+    try {
+        const pool = await connectDatabase();
+        const result = await pool.request()
+            .input('ShipListSeq', mssql.Int, ShipListSeq)
+            .input('ShipListTripCode', mssql.Int, ShipListTripCode)
+            .input('ShipListShipLoCode', mssql.Int, ShipListShipLoCode)
+            .query(`
+                INSERT INTO SHIPMENT_LIST (ShipListSeq, ShipListTripCode, ShipListShipLoCode)
+                VALUES (@ShipListSeq, @ShipListTripCode, @ShipListShipLoCode)
+            `);
+        return res.status(201).json({ message: "Shipment list created successfully!", ShipListSeq });
+    } catch (err) {
+        console.error("⚠️ Error inserting shipment list:", err);
+        return res.status(500).json({ error: "Database error" });
+    }
+});
+
+// Update Shipment List
+app.patch("/UpdateShipmentList", async (req, res) => {
+    let { ShipListTripCode, ShipListSeq, ShipListShipLoCode, ShipListStatus, LatUpdateStatus, LongUpdateStatus, LastUpdateStatus } = req.body;
+
+    // Convert LastUpdateStatus from String to DATETIME
+    LastUpdateStatus = moment(LastUpdateStatus, "DD/MM/YYYY HH:mm:ss").format("YYYY-MM-DD HH:mm:ss");
+
+    try {
+        const pool = await connectDatabase();
+        await pool.request()
+            .input('ShipListShipLoCode', mssql.Int, ShipListShipLoCode)
+            .input('ShipListStatus', mssql.NVarChar, ShipListStatus)
+            .input('LatUpdateStatus', mssql.Decimal, LatUpdateStatus)
+            .input('LongUpdateStatus', mssql.Decimal, LongUpdateStatus)
+            .input('LastUpdateStatus', mssql.DateTime, LastUpdateStatus)
+            .input('ShipListTripCode', mssql.Int, ShipListTripCode)
+            .input('ShipListSeq', mssql.Int, ShipListSeq)
+            .query(`
+                UPDATE SHIPMENT_LIST 
+                SET ShipListShipLoCode = @ShipListShipLoCode, 
+                    ShipListStatus = @ShipListStatus, 
+                    LatUpdateStatus = @LatUpdateStatus, 
+                    LongUpdateStatus = @LongUpdateStatus, 
+                    LastUpdateStatus = @LastUpdateStatus 
+                WHERE ShipListTripCode = @ShipListTripCode AND ShipListSeq = @ShipListSeq
+            `);
+        res.status(200).json({ message: "Shipment list updated successfully!" });
+    } catch (err) {
+        console.log(err);
+        return res.status(500).send();
+    }
+});
+
+// Update Trip
+app.patch("/UpdateTrip", async (req, res) => {
+    let { TripCode, TripTruckCode, TripMileageIn, TripMileageOut, TripTimeIn, TripTimeOut } = req.body;
+
+    // Check which fields have been provided and update them
+    let updateFields = [];
+    let queryParams = [];
+
+    if (TripMileageIn !== null) {
+        updateFields.push("TripMileageIn = @TripMileageIn");
+        queryParams.push(TripMileageIn);
+    }
+    if (TripMileageOut !== null) {
+        updateFields.push("TripMileageOut = @TripMileageOut");
+        queryParams.push(TripMileageOut);
+    }
+    if (TripTimeIn !== null) {
+        TripTimeIn = moment(TripTimeIn, "DD/MM/YYYY HH:mm:ss").format("YYYY-MM-DD HH:mm:ss");
+        updateFields.push("TripTimeIn = @TripTimeIn");
+        queryParams.push(TripTimeIn);
+    }
+    if (TripTimeOut !== null) {
+        TripTimeOut = moment(TripTimeOut, "DD/MM/YYYY HH:mm:ss").format("YYYY-MM-DD HH:mm:ss");
+        updateFields.push("TripTimeOut = @TripTimeOut");
+        queryParams.push(TripTimeOut);
+    }
+
+    // Add TripCode to queryParams
+    queryParams.push(TripCode);
+
+    const queryString = `UPDATE TRIP SET ${updateFields.join(", ")} WHERE TripCode = @TripCode`;
+
+    // try {
+    //     const pool = await connectDatabase();
+    //     await pool.request().query(queryString, queryParams);
+    //     res.status(200).json({ message: "Trip details updated successfully!" });
+    // } catch (err) {
+    //     console.log(err);
+    //     return res.status(500).send();
+    // }
+    try {
+        const pool = await connectDatabase();
+        await pool.request()
+            .input('TripCode', mssql.Int, TripCode)            // ประเภท Int
+            .input('TripTruckCode', mssql.Int, TripTruckCode)   // ประเภท Int
+            .input('TripMileageIn', mssql.Decimal, TripMileageIn) // ประเภท Decimal
+            .input('TripMileageOut', mssql.Decimal, TripMileageOut) // ประเภท Decimal
+            .input('TripTimeIn', mssql.DateTime, TripTimeIn)     // ประเภท DateTime
+            .input('TripTimeOut', mssql.DateTime, TripTimeOut)   // ประเภท DateTime
+            .query(queryString, queryParams);
+        res.status(200).json({ message: "Trip details updated successfully!" });
+    } catch (err) {
+        console.log(err);
+        return res.status(500).send();
+    }
+});
+
+app.listen(999, function () {
+    console.log('Server running on port 999');
 });
