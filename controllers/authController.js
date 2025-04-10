@@ -1,6 +1,13 @@
 const employeeModel = require('../models/employeeModel');
 const branchModel = require('../models/branchModel');
 
+async function test(req, res) {
+  return res.status(200).json({
+    status: true,
+    message: 'API is working',
+  });
+}
+
 async function login(req, res) {
   const { EmpCode } = req.body;
 
@@ -57,4 +64,5 @@ async function getBranchLocation(req, res) {
 module.exports = {
   login,
   getBranchLocation,
+  test
 };
