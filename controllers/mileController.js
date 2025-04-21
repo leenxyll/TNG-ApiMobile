@@ -96,12 +96,19 @@ async function uploadMileageLogImage(req, res) {
 
     MileLogUpdate = moment(MileLogUpdate, "DD/MM/YYYY HH:mm:ss").format("YYYY-MM-DD HH:mm:ss");
     let timeStamp = moment(MileLogUpdate).format("YYYYMMDD_HHmmss");
-    const filename = `${MileLogTripCode}_Mileage_${timeStamp}${path.extname(req.file.originalname)}`;
-    const newPath = path.join(path.dirname(req.file.path), filename);
-    try {
-        await fs.copyFile(req.file.path, newPath);
-        await fs.unlink(req.file.path); // remove original
+    // สองตัวแรกของ TripCode
+    const folderPrefix = MileLogTripCode.slice(0, 2).toUpperCase(); // เช่น AB
+    const targetDir = path.join("D:/TNG.Image/mileage", folderPrefix); // โฟลเดอร์ปลายทาง
 
+    const filename = `${MileLogTripCode}_Mileage_${timeStamp}${path.extname(req.file.originalname)}`;
+    const newPath = path.join(targetDir, filename);
+    try {
+        // สร้างโฟลเดอร์ถ้ายังไม่มี
+        await fs.mkdir(targetDir, { recursive: true });
+
+        // คัดลอกไฟล์ไปยังตำแหน่งใหม่
+        await fs.copyFile(req.file.path, newPath);
+        await fs.unlink(req.file.path); // ลบไฟล์ต้นทางออก
         console.log('MileLogTripCode:', MileLogTripCode);
         console.log('MileLogRecord:', MileLogRecord);
         console.log('MileLogUpdate:', MileLogUpdate);
