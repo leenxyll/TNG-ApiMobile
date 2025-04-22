@@ -16,8 +16,8 @@ const dynamicStorage = multer.diskStorage({
 
     if (req.baseUrl.includes('/mileLog/uploadPic')) {
       folder = 'D:/TNG.Image/mileage';
-    } else if (req.baseUrl.includes('/invoice')) {
-      folder = 'uploads/invoice/';
+    } else if (req.baseUrl.includes('/invoice/uploadPic')) {
+      folder = 'D:/TNG.Image/shipmentPic';
     }
 
     ensureDirectoryExistence(folder); // สร้างโฟลเดอร์หากยังไม่มี

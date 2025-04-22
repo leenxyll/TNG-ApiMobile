@@ -18,6 +18,8 @@ async function createMileageLog(req, res) {
         if (!MileLogLong) missingFields.push('MileLogLong');
         if (!MileLogTypeCode) missingFields.push('MileLogTypeCode');
 
+        console.error('Missing fields:', missingFields, 'to create mileage log');
+
         return res.status(400).json({
             status: false,
             message: 'ข้อมูลบันทึกเลขไมล์ไม่ครบ',
@@ -43,12 +45,15 @@ async function createMileageLog(req, res) {
 
         let rowsAffected2 = 0;
         if (MileLogTypeCode === 1) {
+            console.log('Update trip timeout by mileage type:', MileLogTypeCode);
             rowsAffected2 = await tripModel.updateTrip(transaction, MileLogTripCode, null, MileLogUpdate, TripShipUpdateEmp, MileLogLat, MileLogLong, MileLogUpdate);
         } else if (MileLogTypeCode === 2) {
+            console.log('Update trip timein by milleage type:', MileLogTypeCode);
             rowsAffected2 = await tripModel.updateTrip(transaction, MileLogTripCode, MileLogUpdate, null, TripShipUpdateEmp, MileLogLat, MileLogLong, MileLogUpdate);
         } else if (MileLogTypeCode === 3) {
             rowsAffected2 = 999;
         } else {
+            console.error('transaction rollback for craeteMileageLog and updateTrip');
             await transaction.rollback();
             return res.status(400).json({ status: false, message: 'MileLogTypeCode ไม่ถูกต้อง' });
         }
@@ -56,13 +61,14 @@ async function createMileageLog(req, res) {
         await transaction.commit();
 
         if (rowsAffected1 > 0 && rowsAffected2 > 0) {
-            console.log('MileLogSeq:', mileLogSeq);
+            console.log('Create mileage log:', mileLogSeq ,' for ', MileLogTripCode, 'success');
             return res.status(200).json({ 
                 status: true, 
                 message: 'บันทึกข้อมูลเลขไมล์สำเร็จ',
                 MileLogSeq: mileLogSeq // คืนค่าตัวนี้กลับไปให้ client ด้วย
             });
         } else {
+            console.error('')
             return res.status(404).json({ status: false, message: 'บันทึกข้อมูลเลขไมล์ไม่สำเร็จ' });
         }
 

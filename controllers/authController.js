@@ -6,12 +6,14 @@ async function test(req, res) {
     status: true,
     message: 'API is working',
   });
+  console.log('test API');
 }
 
 async function login(req, res) {
   const { EmpCode } = req.body;
 
   if (!EmpCode) {
+    console.error('Missing EmpCode in request body');
     return res.status(400).json({ status: false, message: 'กรุณากรอกรหัสพนักงาน' });
   }
 
@@ -19,8 +21,11 @@ async function login(req, res) {
     const employee = await employeeModel.findByEmpCode(EmpCode);
 
     if (!employee) {
+      console.error('Employee not found:', EmpCode);
       return res.status(404).json({ status: false, message: 'ไม่พบพนักงาน' });
     }
+
+    console.log('Get Employee for login success: ', EmpCode, '(',employee.EmpBrchCode,')');
 
     res.status(200).json({
       status: true,
@@ -37,6 +42,7 @@ async function getBranchLocation(req, res) {
   const { BrchCode } = req.query;
 
   if (!BrchCode) {
+    console.error('Missing BrchCode in request query');
     return res.status(400).json({ status: false, message: 'กรุณาระบุรหัสสาขา' });
   }
 
@@ -44,8 +50,11 @@ async function getBranchLocation(req, res) {
     const branch = await branchModel.findByBrchCode(BrchCode);
 
     if (!branch) {
+      console.error('Branch not found:', BrchCode);
       return res.status(404).json({ status: false, message: 'ไม่พบข้อมูลสาขา' });
     }
+
+    console.log('Get Branch success: ', BrchCode, '(',branch.BrchName,')');
 
     res.status(200).json({
       status: true,
