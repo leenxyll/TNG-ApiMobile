@@ -54,7 +54,7 @@ async function getBranchLocation(req, res) {
       return res.status(404).json({ status: false, message: 'ไม่พบข้อมูลสาขา' });
     }
 
-    console.log('Get Branch success: ', BrchCode, '(',branch.BrchName,')');
+    console.log('Get Branch success:', BrchCode, '(',branch.BrchName,')');
 
     res.status(200).json({
       status: true,

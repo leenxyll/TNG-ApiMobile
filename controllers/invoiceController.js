@@ -31,12 +31,12 @@ async function updateInvoiceStatus(req, res) {
     const rowsAffected = await invoiceModel.updateInvoiceStatus(InvoiceShipLogCode, InvoiceShipLogStatusCode, InvoiceShipLogUpdate, InvoiceShipLogLat, InvoiceShipLogLong, InvoiceShipLogEmpCode);
 
     if (rowsAffected > 0) {
-      console.log('Update invoice status: ', InvoiceShipLogCode, 'success');
+      console.log('Update invoice status:', InvoiceShipLogCode, 'success');
       trackingController.updateShippingStatus(InvoiceShipLogCode, InvoiceShipLogStatusCode);
         res.status(200).json({ status: true, message: 'อัปเดทสถานะ Invoice สำเร็จ' });
     }else{
-      console.error('Invoice not found:', InvoiceShipLogCode, 'cannot update status');
-        res.status(404).json({ status: false, message: 'ไม่พบ Invoice' });
+      console.error('Cannot update invoice status:', InvoiceShipLogCode);
+        res.status(404).json({ status: false, message: 'อัปเดทสถานะ Invoice ไม่สำเร็จ' });
     }
 
 

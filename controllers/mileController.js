@@ -61,14 +61,14 @@ async function createMileageLog(req, res) {
         await transaction.commit();
 
         if (rowsAffected1 > 0 && rowsAffected2 > 0) {
-            console.log('Create mileage log:', mileLogSeq ,' for ', MileLogTripCode, 'success');
+            console.log('Create mileage log:', mileLogSeq ,'for', MileLogTripCode, 'success');
             return res.status(200).json({ 
                 status: true, 
                 message: 'บันทึกข้อมูลเลขไมล์สำเร็จ',
                 MileLogSeq: mileLogSeq // คืนค่าตัวนี้กลับไปให้ client ด้วย
             });
         } else {
-            console.error('')
+            console.error('Cannot create mileage log:', mileLogSeq ,'for', MileLogTripCode);
             return res.status(404).json({ status: false, message: 'บันทึกข้อมูลเลขไมล์ไม่สำเร็จ' });
         }
 
@@ -93,6 +93,8 @@ async function uploadMileageLogImage(req, res) {
         if (!MileLogSeq) missingFields.push('MileLogSeq');
         if (!req.file) missingFields.push('Picture');
 
+        console.error('Missing fields:', missingFields, 'to update invoice status');
+
         return res.status(400).json({
             status: false,
             message: 'ข้อมูลบันทึกเลขไมล์ไม่ครบ',
@@ -115,19 +117,18 @@ async function uploadMileageLogImage(req, res) {
         // คัดลอกไฟล์ไปยังตำแหน่งใหม่
         await fs.copyFile(req.file.path, newPath);
         await fs.unlink(req.file.path); // ลบไฟล์ต้นทางออก
-        console.log('MileLogTripCode:', MileLogTripCode);
-        console.log('MileLogRecord:', MileLogRecord);
-        console.log('MileLogUpdate:', MileLogUpdate);
 
         const rowsAffected = await mileModel.updateMileImage( MileLogSeq, MileLogTripCode, MileLogRecord, MileLogUpdate, newPath);
 
         if (rowsAffected > 0) {
+            console.log('Upload image mileage log:', mileLogSeq ,'for', MileLogTripCode, 'success');
             return res.status(200).json({ status: true, message: 'อัปโหลดรูปภาพสำเร็จ' });
         } else {
-            return res.status(404).json({ status: false, message: 'ไม่พบข้อมูล MileLog ที่ต้องการอัปเดตรูป' });
+            console.error('Cannot upload image mileage log:', mileLogSeq ,'for', MileLogTripCode);
+            return res.status(404).json({ status: false, message: 'อัปโหลดรูปไม่สำเร็จ' });
         }
     } catch (err) {
-        console.error('Upload Error:', err);
+        console.error('Upload image Error:', err);
         return res.status(500).json({ status: false, message: 'เกิดข้อผิดพลาดในการอัปโหลดรูป' });
     }
 }
