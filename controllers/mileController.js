@@ -121,10 +121,10 @@ async function uploadMileageLogImage(req, res) {
         const rowsAffected = await mileModel.updateMileImage( MileLogSeq, MileLogTripCode, MileLogRecord, MileLogUpdate, newPath);
 
         if (rowsAffected > 0) {
-            console.log('Upload image mileage log:', mileLogSeq ,'for', MileLogTripCode, 'success');
+            console.log('Upload image mileage log:', MileLogSeq ,'for', MileLogTripCode, 'success');
             return res.status(200).json({ status: true, message: 'อัปโหลดรูปภาพสำเร็จ' });
         } else {
-            console.error('Cannot upload image mileage log:', mileLogSeq ,'for', MileLogTripCode);
+            console.error('Cannot upload image mileage log:', MileLogSeq ,'for', MileLogTripCode);
             return res.status(404).json({ status: false, message: 'อัปโหลดรูปไม่สำเร็จ' });
         }
     } catch (err) {
