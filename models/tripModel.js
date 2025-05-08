@@ -87,6 +87,7 @@ async function updateTrip(transaction, TripCode, TripTimeIn, TripTimeOut, TripSh
         // TripTimeOut = moment(TripTimeOut, "DD/MM/YYYY HH:mm:ss").format("YYYY-MM-DD HH:mm:ss");
         }
         updateFields.push("TripTimeOut = @TripTimeOut");
+        updateFields.push("TripStatusCode = 2"); // เพิ่ม TripStatusCode = 2
         queryParams.push(TripTimeOut);
     }
 

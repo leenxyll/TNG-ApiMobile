@@ -12,12 +12,14 @@ function ensureDirectoryExistence(dir) {
 // storage แบบ dynamic ตาม URL
 const dynamicStorage = multer.diskStorage({
   destination: function (req, file, cb) {
-    let folder = 'D:/TNG.Image/mileage';
+    let folder = process.env.FOLDER_PATH;
 
-    if (req.baseUrl.includes('/mileLog/uploadPic')) {
-      folder = 'D:/TNG.Image/mileage';
-    } else if (req.baseUrl.includes('/invoice/uploadPic')) {
-      folder = 'D:/TNG.Image/shipmentPic';
+    console.log('req.originalUrl:', req.originalUrl); // log URL ที่เข้ามา
+
+    if (req.originalUrl.includes('/mobile/driver/mileLog/uploadPic')) {
+      folder = process.env.FOLDER_PATH+'/mileage';
+    } else if (req.originalUrl.includes('/mobile/driver/invoice/uploadPic')) {
+      folder = process.env.FOLDER_PATH+'/shipmentPicture';
     }
 
     ensureDirectoryExistence(folder); // สร้างโฟลเดอร์หากยังไม่มี

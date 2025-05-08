@@ -5,7 +5,7 @@ async function findByBrchCode(BrchCode) {
     const pool = await db.connectDatabase();
     const result = await pool.request()
         .input('BrchCode', mssql.NVarChar, BrchCode)
-        .query('SELECT BrchName, BrchLat, BrchLong FROM BRANCH WHERE BrchCode = @BrchCode');
+        .query('SELECT BrchName, BrchLat, BrchLong, BrchRadius FROM BRANCH WHERE BrchCode = @BrchCode');
     return result.recordset[0];
 }
 

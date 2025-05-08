@@ -106,7 +106,7 @@ async function uploadMileageLogImage(req, res) {
     let timeStamp = moment(MileLogUpdate).format("YYYYMMDD_HHmmss");
     // สองตัวแรกของ TripCode
     const folderPrefix = MileLogTripCode.slice(0, 2).toUpperCase(); // เช่น AB
-    const targetDir = path.join("D:/TNG.Image/mileage", folderPrefix); // โฟลเดอร์ปลายทาง
+    const targetDir = path.join(process.env.FOLDER_PATH+"/mileage", folderPrefix); // โฟลเดอร์ปลายทาง
 
     const filename = `${MileLogTripCode}_Mileage_${timeStamp}${path.extname(req.file.originalname)}`;
     const newPath = path.join(targetDir, filename);
@@ -121,10 +121,10 @@ async function uploadMileageLogImage(req, res) {
         const rowsAffected = await mileModel.updateMileImage( MileLogSeq, MileLogTripCode, MileLogRecord, MileLogUpdate, newPath);
 
         if (rowsAffected > 0) {
-            console.log('Upload image mileage log:', mileLogSeq ,'for', MileLogTripCode, 'success');
+            console.log('Upload image mileage log:', MileLogSeq ,'for', MileLogTripCode, 'success');
             return res.status(200).json({ status: true, message: 'อัปโหลดรูปภาพสำเร็จ' });
         } else {
-            console.error('Cannot upload image mileage log:', mileLogSeq ,'for', MileLogTripCode);
+            console.error('Cannot upload image mileage log:', MileLogSeq ,'for', MileLogTripCode);
             return res.status(404).json({ status: false, message: 'อัปโหลดรูปไม่สำเร็จ' });
         }
     } catch (err) {

@@ -62,7 +62,7 @@ async function getBranchLocation(req, res) {
       branchName: branch.BrchName,
       latitude: branch.BrchLat,
       longitude: branch.BrchLong,
-      radius: 200, // รัศมี (อาจดึงจาก config หรือฐานข้อมูล)
+      radius: branch.BrchRadius, // รัศมี (อาจดึงจาก config หรือฐานข้อมูล)
     });
   } catch (error) {
     console.error('Error in getBranchLocation:', error);

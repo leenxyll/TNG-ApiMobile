@@ -13,14 +13,22 @@ const config = {
     }
 };
 
+// เก็บ pool ที่เชื่อมต่อไว้ที่นี่
+let poolInstance = null;
+
 async function connectDatabase() {
+    if (poolInstance) {
+        return poolInstance; // ถ้ามี pool อยู่แล้ว ให้ใช้ตัวเดิม
+    }
+
     try {
-        const pool = await mssql.connect(config);  // เชื่อมต่อฐานข้อมูลและสร้าง connection pool
+        poolInstance = await mssql.connect(config); // เชื่อมต่อครั้งแรก
         console.log('Connected to SQL Server successfully.');
-        return pool;  // คืนค่า pool ที่เชื่อมต่อแล้ว
+        return poolInstance;
     } catch (err) {
-        console.error('Error connecting to database:', err);  // แสดงข้อผิดพลาดเมื่อไม่สามารถเชื่อมต่อได้
-        throw err;  // ข้อผิดพลาดจะถูกโยนออกไปเพื่อจัดการในที่อื่น
+        console.error('Error connecting to database:', err);
+        poolInstance = null; // กรณีเชื่อมต่อล้มเหลว ต้อง reset เป็น null
+        throw err;
     }
 }
 
