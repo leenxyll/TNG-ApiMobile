@@ -113,10 +113,12 @@ async function uploadShipmentImage(req, res) {
         updateTime = moment(ShipPicUpdate, "DD/MM/YYYY HH:mm:ss").format("YYYY-MM-DD HH:mm:ss");
         let timeStamp = moment(updateTime).format("YYYYMMDD_HHmmss");
         const file = files[i];
+        let invoiceCodeSafe = invoiceCode.replace(/[\\/:*?"<>|]/g, "");
+
         
         const folderPrefix = invoiceCode.slice(0, 2).toUpperCase(); // เช่น AB
         const targetDir = path.join(process.env.FOLDER_PATH+"/shipmentPicture", folderPrefix); // โฟลเดอร์ปลายทาง
-        const filename = `${invoiceCode}_Shipment_${timeStamp}${i + 1}${path.extname(file.originalname)}`;
+        const filename = `${invoiceCodeSafe}_Shipment_${timeStamp}${i + 1}${path.extname(file.originalname)}`;
         const newPath = path.join(targetDir, filename);
 
           // สร้างโฟลเดอร์ถ้ายังไม่มี
